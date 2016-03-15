@@ -99,6 +99,7 @@ module SchemaValidations
           datatype = case
                      when respond_to?(:defined_enums) && defined_enums.has_key?(column.name) then :enum
                      when column.type == :integer then :integer
+                     when column.type == :decimal then :decimal
                      when column.number? then :numeric
                      when column.respond_to?(:text?) && column.text? then :text
                      when [:string, :text].include?(column.type) then :text
@@ -108,6 +109,9 @@ module SchemaValidations
           case datatype
           when :integer
             validate_logged :validates_numericality_of, name, :allow_nil => true, :only_integer => true
+          when :decimal
+            max_val = 10**(column.precision - column.scale)
+            validate_logged :validates_numericality_of, name, :allow_nil => true, :less_than => max_val, :greater_than => -max_val
           when :numeric
             validate_logged :validates_numericality_of, name, :allow_nil => true
           when :text
