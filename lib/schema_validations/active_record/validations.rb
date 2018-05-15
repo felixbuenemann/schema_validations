@@ -108,7 +108,11 @@ module SchemaValidations
 
           case datatype
           when :integer
-            validate_logged :validates_numericality_of, name, :allow_nil => true, :only_integer => true
+            # Assume integer type is always signed and defaults to 4 bytes.
+            bits = (column.limit || 4) * 8 - 1
+            min_val = -2**bits
+            max_val = 2**bits - 1
+            validate_logged :validates_numericality_of, name, :allow_nil => true, :only_integer => true, :less_than_or_equal_to => max_val, :greater_than_or_equal_to => min_val
           when :decimal
             max_val = 10**(column.precision - column.scale)
             validate_logged :validates_numericality_of, name, :allow_nil => true, :less_than => max_val, :greater_than => -max_val
